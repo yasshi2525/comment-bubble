@@ -1,0 +1,175 @@
+{
+	"width": 1280,
+	"height": 720,
+	"fps": 60,
+	"main": "./script/main.js",
+	"assets": {
+		"main": {
+			"type": "script",
+			"path": "script/main.js",
+			"global": true
+		},
+		"factoryBox2D": {
+			"type": "script",
+			"path": "script/factoryBox2D.js",
+			"global": true
+		},
+		"listenerComment": {
+			"type": "script",
+			"path": "script/listenerComment.js",
+			"global": true
+		},
+		"sceneMain": {
+			"type": "script",
+			"path": "script/sceneMain.js",
+			"global": true
+		},
+		"style": {
+			"type": "script",
+			"path": "script/style.js",
+			"global": true
+		},
+		"entityBullet": {
+			"type": "script",
+			"path": "script/entityBullet.js",
+			"global": true
+		},
+		"factoryBullet": {
+			"type": "script",
+			"path": "script/factoryBullet.js",
+			"global": true
+		},
+		"controllerDeferrable": {
+			"type": "script",
+			"path": "script/controllerDeferrable.js",
+			"global": true
+		},
+		"controllerHorizon": {
+			"type": "script",
+			"path": "script/controllerHorizon.js",
+			"global": true
+		},
+		"entityFly": {
+			"type": "script",
+			"path": "script/entityFly.js",
+			"global": true
+		},
+		"factoryWorldHorizon": {
+			"type": "script",
+			"path": "script/factoryWorldHorizon.js",
+			"global": true
+		},
+		"factoryCannon": {
+			"type": "script",
+			"path": "script/factoryCannon.js",
+			"global": true
+		},
+		"connectorFireEvent": {
+			"type": "script",
+			"path": "script/connectorFireEvent.js",
+			"global": true
+		},
+		"entityCannon": {
+			"type": "script",
+			"path": "script/entityCannon.js",
+			"global": true
+		},
+		"parameterSnapshot": {
+			"type": "script",
+			"path": "script/parameterSnapshot.js",
+			"global": true
+		},
+		"queueBullet": {
+			"type": "script",
+			"path": "script/queueBullet.js",
+			"global": true
+		},
+		"resolverBroadcaster": {
+			"type": "script",
+			"path": "script/resolverBroadcaster.js",
+			"global": true
+		},
+		"serializerEntityCannon": {
+			"type": "script",
+			"path": "script/serializerEntityCannon.js",
+			"global": true
+		},
+		"serializerQueueBullet": {
+			"type": "script",
+			"path": "script/serializerQueueBullet.js",
+			"global": true
+		},
+		"bullet-other": {
+			"type": "image",
+			"path": "image/bullet-other.png",
+			"width": 75,
+			"height": 75
+		},
+		"bullet-self": {
+			"type": "image",
+			"path": "image/bullet-self.png",
+			"width": 75,
+			"height": 75
+		},
+		"serializerEntityBullet": {
+			"type": "script",
+			"path": "script/serializerEntityBullet.js",
+			"global": true
+		}
+	},
+	"environment": {
+		"sandbox-runtime": "3",
+		"nicolive": {
+			"supportedModes": [
+				"multi_admission"
+			]
+		},
+		"external": {
+			"namagameComment": "0"
+		}
+	},
+	"globalScripts": [
+		"node_modules/@akashic-extension/akashic-box2d/lib/Box2D.js",
+		"node_modules/@akashic-extension/akashic-box2d/lib/ContactManager.js",
+		"node_modules/@akashic-extension/akashic-box2d/lib/index.js",
+		"node_modules/@akashic-extension/akashic-box2d/lib/parameters.js",
+		"node_modules/@akashic-extension/akashic-box2d/patch/box2d.js",
+		"node_modules/@akashic-extension/akashic-box2d/patch/index.js",
+		"node_modules/@akashic-extension/akashic-box2d/patch/math.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/converterFixture.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/index.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/objectMapper.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/serializerAABB.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/serializerBody.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/serializerBox2D.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/serializerEbody.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/serializerEntity.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/serializerFilledRect.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/serializerFilterData.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/serializerFixture.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/serializerFrameSprite.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/serializerImageAsset.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/serializerLabel.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/serializerMat22.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/serializerMatrixPlain.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/serializerObject.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/serializerPane.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/serializerShape.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/serializerShapeCircle.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/serializerShapePolygon.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/serializerSprite.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/serializerSweep.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/serializerTransform.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/serializerTreeDynamic.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/serializerTreeNodeDynamic.js",
+		"node_modules/@yasshi2525/akashic-box2d-serializer/lib/serializerVec2.js",
+		"node_modules/box2dweb/box2d.js",
+		"node_modules/grapheme-splitter/index.js"
+	],
+	"moduleMainScripts": {
+		"grapheme-splitter": "node_modules/grapheme-splitter/index.js",
+		"@akashic-extension/akashic-box2d": "node_modules/@akashic-extension/akashic-box2d/lib/index.js",
+		"box2dweb": "node_modules/box2dweb/box2d.js",
+		"@yasshi2525/akashic-box2d-serializer": "node_modules/@yasshi2525/akashic-box2d-serializer/lib/index.js"
+	}
+}
