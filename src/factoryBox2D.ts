@@ -1,7 +1,9 @@
-import { Box2D } from "@akashic-extension/akashic-box2d";
+import { Box2D, Box2DWeb } from "@akashic-extension/akashic-box2d";
 import { patchBox2D, patchBox2DMath } from "@akashic-extension/akashic-box2d/patch";
 import { style } from "./style";
 import { HorizonController } from "./controllerHorizon";
+import { KillController } from "./controllerKill";
+import { initMath } from "./math";
 
 export interface Box2DFactoryParameterObject {
     scene: g.Scene;
@@ -10,6 +12,7 @@ export interface Box2DFactoryParameterObject {
 export interface Box2DNewInstanceResult {
     box2d: Box2D;
     horizonController: HorizonController;
+    killController: KillController;
 }
 
 export class Box2DFactory {
@@ -28,14 +31,22 @@ export class Box2DFactory {
         patchBox2D(box2d, { maxTOILoop: 10 });
         // TODO: g.Math 実装時は干渉しないよう削除
         patchBox2DMath();
+        initMath();
         return {
             box2d,
             horizonController: this._newHorizonController(box2d),
+            killController: this._newKillController(box2d),
         };
     }
 
     _newHorizonController(box2d: Box2D): HorizonController {
         const controller = new HorizonController({ box2d });
+        box2d.world.AddController(controller);
+        return controller;
+    }
+
+    _newKillController(box2d: Box2D): KillController {
+        const controller = new KillController({ box2d });
         box2d.world.AddController(controller);
         return controller;
     }

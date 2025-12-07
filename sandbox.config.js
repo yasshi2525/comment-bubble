@@ -10,6 +10,7 @@ export const showMenu = true;
 /** @type {import("@akashic/sandbox-configuration").SandboxConfiguration["displayOptions"]} */
 export const displayOptions = {
     // backgroundColor: "black"
+    fitsToScreen: true,
 };
 
 /** @type {import("./lib/NamagameCommentConfig").NamagameCommentConfigComment[]} */

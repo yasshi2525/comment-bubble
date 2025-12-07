@@ -1,9 +1,9 @@
-import { EntitySerializerParameterObject, FilledRectParam, FilledRectSerializer, ObjectDef, ObjectSerializer } from "@yasshi2525/akashic-box2d-serializer";
+import { EntityParam, EntitySerializer, EntitySerializerParameterObject, ObjectDef, ObjectSerializer } from "@yasshi2525/akashic-box2d-serializer";
 import { CannonEntity } from "./entityCannon";
 
 export const cannonEntityType = CannonEntity.name;
 
-export interface CannonEntityParam extends FilledRectParam {
+export interface CannonEntityParam extends EntityParam {
     firingInterval: number;
     lowestAngle: number;
     highestAngle: number;
@@ -18,7 +18,7 @@ export interface CannonEntitySerializerParameterObject extends Omit<EntitySerial
 
 }
 
-export class CannonEntitySerializer extends FilledRectSerializer implements ObjectSerializer<CannonEntity, CannonEntityParam> {
+export class CannonEntitySerializer extends EntitySerializer implements ObjectSerializer<CannonEntity, CannonEntityParam> {
     constructor(param: CannonEntitySerializerParameterObject) {
         super({
             ...param,
@@ -35,7 +35,6 @@ export class CannonEntitySerializer extends FilledRectSerializer implements Obje
             type: cannonEntityType,
             param: {
                 ...super.serialize(object).param,
-                children: undefined, // コンストラクタで初期化する g.Label までシリアライズしてしまう。
                 firingInterval: object.firingInterval,
                 lowestAngle: object.lowestAngle,
                 highestAngle: object.highestAngle,
@@ -46,6 +45,11 @@ export class CannonEntitySerializer extends FilledRectSerializer implements Obje
                 isStarted: object._isStarted,
             },
         };
+    }
+
+    override _serializeChildren(): undefined {
+        // body, base の serialize を防ぐ
+        return undefined;
     }
 
     override deserialize(json: ObjectDef<CannonEntityParam>): CannonEntity {

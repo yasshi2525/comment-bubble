@@ -1,12 +1,15 @@
-export interface BulletEntityParameterObject extends Omit<g.SpriteParameterObject, "src"> {
+import { MutableComponent, MutableComponentEntity, MutableComponentParameterObject } from "./componentMutable";
+
+export interface BulletEntityParameterObject extends Omit<g.SpriteParameterObject, "src">, MutableComponentParameterObject {
     font: g.Font;
     character: string;
     isSelfComment: boolean;
     commentID?: string;
 }
 
-export class BulletEntity extends g.Sprite {
+export class BulletEntity extends g.Sprite implements MutableComponentEntity {
     static readonly assets: string[] = ["bullet-self", "bullet-other"];
+    readonly mutableComponent: MutableComponent;
     readonly _character: string;
     readonly _commentID?: string;
 
@@ -16,6 +19,7 @@ export class BulletEntity extends g.Sprite {
             ...param,
             src: param.scene.asset.getImageById(assetName),
         });
+        this.mutableComponent = new MutableComponent(param);
         this._commentID = param.commentID;
         this._character = param.character;
         const label = new g.Label({

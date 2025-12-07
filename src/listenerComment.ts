@@ -95,9 +95,13 @@ export class CommentListener {
         if (ev.isAnonymous) {
             return false;
         }
+        // どうも放送者コメントでも userID が入っているような気がするので、先にID比較
+        if (ev.userID === g.game.selfId) {
+            return true;
+        }
         if (ev.userID === undefined) {
             return this._broadcasterResolver.isBroadcaster();
         }
-        return ev.userID === g.game.selfId;
+        return false;
     }
 }

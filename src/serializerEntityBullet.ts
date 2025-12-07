@@ -1,9 +1,10 @@
-import { EntityParam, ObjectDef, ObjectSerializer, SpriteParam, SpriteSerializer, SpriteSerializerParameterObject } from "@yasshi2525/akashic-box2d-serializer";
+import { ObjectDef, ObjectSerializer, SpriteParam, SpriteSerializer, SpriteSerializerParameterObject } from "@yasshi2525/akashic-box2d-serializer";
 import { BulletEntity } from "./entityBullet";
+import { MutableComponent, MutableComponentParam } from "./componentMutable";
 
 export const bulletType = BulletEntity.name;
 
-export interface BulletParam extends SpriteParam {
+export interface BulletParam extends SpriteParam, MutableComponentParam {
     character: string;
     commentID?: string;
 }
@@ -29,13 +30,14 @@ export class BulletEntitySerializer extends SpriteSerializer implements ObjectSe
             type: bulletType,
             param: {
                 ...super.serialize(object).param,
+                ...object.mutableComponent.serialize(),
                 character: object._character,
                 commentID: object._commentID,
             },
         };
     }
 
-    override _serializeChildren(children: g.E["children"]): undefined {
+    override _serializeChildren(): undefined {
         // label の serialize を防ぐ
         return undefined;
     }
@@ -48,6 +50,7 @@ export class BulletEntitySerializer extends SpriteSerializer implements ObjectSe
     override _deserializeParameterObject(param: BulletParam) {
         return {
             ...super._deserializeParameterObject(param),
+            ...MutableComponent.deserializeParameterObject(param),
             character: param.character,
             commentID: param.commentID,
             isSelfComment: param.commentID === g.game.selfId,

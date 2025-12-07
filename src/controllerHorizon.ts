@@ -32,7 +32,6 @@ export class HorizonController extends DeferrableController {
         }
         return () => {
             for (const body of disposals) {
-                body.SetUserData("disposed");
                 const ebody = this.box2d.getEBodyFromb2Body(body);
                 if (ebody) {
                     ebody.entity.destroy();

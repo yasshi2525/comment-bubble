@@ -32,13 +32,15 @@ export interface CanonnEntityParameterObject extends Omit<g.FilledRectParameterO
 /**
  * 弾がなかったら即時発射はめんどくさそうなので定期発射（特にスナップショット復帰時の扱いが怖い）
  */
-export class CannonEntity extends g.FilledRect {
-    static readonly assets: string[] = [];
+export class CannonEntity extends g.E {
+    static readonly assets: string[] = ["cannon-base", "cannon-body"];
     readonly onFire: g.Trigger = new g.Trigger();
     readonly firingInterval: number;
     readonly lowestAngle: number;
     readonly highestAngle: number;
     readonly rotationSpeed: number;
+    readonly _body: g.Sprite;
+    readonly _base: g.Sprite;
     _cachedCenter?: g.CommonOffset;
     _angle: number;
     _availableAfter: number;
@@ -48,7 +50,6 @@ export class CannonEntity extends g.FilledRect {
     constructor(param: CanonnEntityParameterObject) {
         super({
             ...param,
-            cssColor: "black",
             width: style(param.scene).cannon.entity.width,
             height: style(param.scene).cannon.entity.height,
         });
@@ -86,6 +87,27 @@ export class CannonEntity extends g.FilledRect {
         }
         this.rotationSpeed = param.rotationSpeed;
         this._direction = param.initialDirection;
+
+        this._body = new g.Sprite({
+            scene: this.scene,
+            parent: this,
+            src: this.scene.asset.getImageById("cannon-body"),
+            x: this.width / 2,
+            y: this.height / 2,
+            angle: this._toBodyAngle(),
+            anchorX: 0.5,
+            anchorY: 0.5,
+        });
+        this._base = new g.Sprite({
+            scene: this.scene,
+            parent: this,
+            src: this.scene.asset.getImageById("cannon-base"),
+            x: this.width / 2,
+            y: this.height / 2,
+            anchorX: 0.5,
+            anchorY: 0.5,
+        });
+
         this._isStarted = false;
         // キャッシュをあらかじめ作成
         this.center;
@@ -135,6 +157,11 @@ export class CannonEntity extends g.FilledRect {
             this._turnUp();
         }
         this._adjustAngleRange();
+        const oldAngle = this._body.angle;
+        this._body.angle = this._toBodyAngle();
+        if (this._body.angle !== oldAngle) {
+            this._body.modified();
+        }
     }
 
     _shouldTurnDown(): boolean {
@@ -160,6 +187,10 @@ export class CannonEntity extends g.FilledRect {
         if (this._angle < this.lowestAngle) {
             this._angle = this.lowestAngle;
         }
+    }
+
+    _toBodyAngle(): number {
+        return -this._angle / Math.PI * 180;
     }
 
     _prepareFire(): void {

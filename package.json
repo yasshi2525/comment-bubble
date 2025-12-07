@@ -7,12 +7,13 @@
     "type": "module",
     "scripts": {
         "postinstall": "npm run build",
-        "build": "rimraf ./scripts && tsc && akashic scan asset script",
+        "build": "rimraf ./script && tsc && akashic scan asset script",
         "build:watch": "tsc -w",
         "update": "akashic scan asset && akashic scan globalScripts",
         "lint": "eslint . --fix",
         "lint:check": "eslint .",
         "start": "akashic serve -s nicolive",
+        "start:silent": "akashic serve -s nicolive --no-open-browser",
         "export-zip": "rimraf game.zip && akashic export zip -o game.zip --nicolive",
         "test": "jest"
     },
@@ -34,7 +35,7 @@
     },
     "dependencies": {
         "@akashic-extension/akashic-box2d": "^3.1.3",
-        "@yasshi2525/akashic-box2d-serializer": "^0.1.5",
+        "@yasshi2525/akashic-box2d-serializer": "^0.2.0",
         "grapheme-splitter": "^1.0.4"
     }
 }

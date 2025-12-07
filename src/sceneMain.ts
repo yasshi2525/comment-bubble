@@ -11,11 +11,16 @@ import { CannonEntity } from "./entityCannon";
 import { Box2DSerializer, ObjectDef, PlainMatrixSerializer } from "@yasshi2525/akashic-box2d-serializer";
 import { CannonEntityParam, CannonEntitySerializer } from "./serializerEntityCannon";
 import { BulletQueueParam, BulletQueueSerializer } from "./serializerQueueBullet";
-import { BulletEntity } from "./entityBullet";
 import { BroadcasterResolver } from "./resolverBroadcaster";
 import { Box2D } from "@akashic-extension/akashic-box2d";
 import { HorizonController } from "./controllerHorizon";
 import { BulletEntitySerializer } from "./serializerEntityBullet";
+import { LayerEntitySerializer } from "./serializerEntityLayer";
+import { ContantListenerFactory } from "./factoryListenerContact";
+import { FlyFactory } from "./factoryFly";
+import { KillController } from "./controllerKill";
+import { FlyEntitySerializer } from "./serializerEntityFly";
+import { isDeferrableComponentEBody } from "./componentdeferrable";
 
 export interface MainSceneParameterObject extends g.SceneParameterObject {
     snapshot?: SnapshotParameterObject;
@@ -28,15 +33,22 @@ export class MainScene extends g.Scene {
     readonly _snapshot?: SnapshotParameterObject;
     private __tick?: number;
     private __characterFont?: g.Font;
+    private __backgroundLayer?: g.E;
+    private __foregroundLayer?: g.E;
     private __box2d?: Box2D;
     private __horizonController?: HorizonController;
+    private __killController?: KillController;
     private __box2dSerializer?: Box2DSerializer;
     private __cannon?: CannonEntity;
     private __bulletQueue?: BulletQueue;
     private __bulletFactory?: BulletFactory;
+    private __flyFactory?: FlyFactory;
+    private __plainMatrixSerializer?: PlainMatrixSerializer;
     private __cannonSerializer?: CannonEntitySerializer;
     private __bulletQueueSerializer?: BulletQueueSerializer;
     private __bulletSerializer?: BulletEntitySerializer;
+    private __flySerializer?: FlyEntitySerializer;
+    private __layerSerializer?: LayerEntitySerializer;
 
     constructor(param: MainSceneParameterObject) {
         super({
@@ -51,6 +63,7 @@ export class MainScene extends g.Scene {
     _handleLoad(): void {
         this._initializeTickCounter();
         this._initializeCharacterFont();
+        this._initializeLayer();
         this._initializeBox2D();
         this._initializeBox2dSerializer();
         this._initializeBackground();
@@ -70,16 +83,57 @@ export class MainScene extends g.Scene {
         return this.__characterFont = new g.DynamicFont(style(this).character.font);
     }
 
+    _initializeLayer() {
+        if (!this._snapshot) {
+            this.__backgroundLayer = new g.E({
+                scene: this,
+                parent: this,
+                width: g.game.width,
+                height: g.game.height,
+            });
+            this.__foregroundLayer = new g.E({
+                scene: this,
+                parent: this,
+                width: g.game.width,
+                height: g.game.height,
+            });
+        }
+        else {
+            this.__backgroundLayer = this._layerSerializer.deserialize(this._snapshot.layers.background);
+            this.__foregroundLayer = this._layerSerializer.deserialize(this._snapshot.layers.foreground);
+        }
+        // 万が一サーバーが skip するとスナップショットに影響するのでガード
+        // ロードした瞬間は skipping でないので一瞬映るがそこには目を瞑る。
+        if (!g.game.isActiveInstance()) {
+            g.game.onSkipChange.add((skipping) => {
+                if (skipping) {
+                    this._backgroundLayer.hide();
+                    this._foregroundLayer.hide();
+                }
+                else {
+                    this._backgroundLayer.show();
+                    this._foregroundLayer.show();
+                }
+            });
+        }
+    }
+
     _initializeBox2D() {
         const box2dFactory = new Box2DFactory({ scene: this });
-        const { box2d, horizonController } = box2dFactory.newInstance();
+        const { box2d, horizonController, killController } = box2dFactory.newInstance();
+        const contactListenerFactory = new ContantListenerFactory({ box2d });
+        box2d.world.SetContactListener(contactListenerFactory.newInstance());
         this.__box2d = box2d;
         this.__horizonController = horizonController;
+        this.__killController = killController;
         this.onUpdate.add(() => {
             this._box2d.step(1 / g.game.fps);
+            for (const ebody of this._box2d.bodies.filter(isDeferrableComponentEBody)) {
+                ebody.entity.handleAfterStep();
+            }
         });
 
-        return { box2d, horizonController };
+        return { box2d, horizonController, killController };
     }
 
     _initializeBox2dSerializer() {
@@ -95,6 +149,11 @@ export class MainScene extends g.Scene {
             plainMatrixSerializer: this._box2dSerializer._plainMatrixSerializer,
         });
         this.__box2dSerializer._entitySerializers.push(this.__bulletSerializer);
+        this.__flySerializer = new FlyEntitySerializer({
+            scene: this,
+            plainMatrixSerializer: this._box2dSerializer._plainMatrixSerializer,
+        });
+        this.__box2dSerializer._entitySerializers.push(this.__flySerializer);
         return this.__box2dSerializer;
     }
 
@@ -105,10 +164,16 @@ export class MainScene extends g.Scene {
         this.__bulletFactory = new BulletFactory({
             scene: this,
             box2d: this._box2d,
-            controllers: [this._horizonController],
-            initialPower: style(this).cannon.fire.power,
+            controllers: [this._killController, this._horizonController],
             cannon,
+            layer: this._backgroundLayer,
             characterFont: this._characterFont,
+        });
+        this.__flyFactory = new FlyFactory({
+            scene: this,
+            box2d: this._box2d,
+            controllers: [this._killController],
+            layer: this._backgroundLayer,
         });
         return {
             cannon,
@@ -145,6 +210,7 @@ export class MainScene extends g.Scene {
     _createNewCannon(): CannonEntity {
         const cannonFactory = new CannonFactory({
             scene: this,
+            layer: this._foregroundLayer,
         });
         return cannonFactory.newInstance();
     }
@@ -171,6 +237,10 @@ export class MainScene extends g.Scene {
         if (this._snapshot) {
             const ebodies = this._box2dSerializer.desrializeBodies(this._snapshot.box2d);
             this._bulletFactory.restoreController(ebodies);
+            this._flyFactory.restore(ebodies);
+        }
+        else {
+            this._flyFactory.newInstance();
         }
     }
 
@@ -181,6 +251,10 @@ export class MainScene extends g.Scene {
                     const snapshot = {
                         tick: this._tick,
                         box2d: this._box2dSerializer.serializeBodies(),
+                        layers: {
+                            background: this._layerSerializer.serialize(this._backgroundLayer),
+                            foreground: this._layerSerializer.serialize(this._foregroundLayer),
+                        },
                         cannon: this._cannonSerializer.serialize(this._cannon),
                         bulletQueue: this._bulletQueueSerializer.serialize(this._bulletQueue),
                     } satisfies SnapshotParameterObject;
@@ -211,6 +285,20 @@ export class MainScene extends g.Scene {
         return this.__characterFont;
     }
 
+    get _backgroundLayer(): g.E {
+        if (!this.__backgroundLayer) {
+            throw new Error("backgroundLayer isn't defined.");
+        }
+        return this.__backgroundLayer;
+    }
+
+    get _foregroundLayer(): g.E {
+        if (!this.__foregroundLayer) {
+            throw new Error("foregroundLayer isn't defined.");
+        }
+        return this.__foregroundLayer;
+    }
+
     get _box2d(): Box2D {
         if (!this.__box2d) {
             throw new Error("box2d isn't defined.");
@@ -223,6 +311,13 @@ export class MainScene extends g.Scene {
             throw new Error("horizonController isn't defined.");
         }
         return this.__horizonController;
+    }
+
+    get _killController(): KillController {
+        if (!this.__killController) {
+            throw new Error("killController isn't defined.");
+        }
+        return this.__killController;
     }
 
     get _box2dSerializer(): Box2DSerializer {
@@ -246,6 +341,13 @@ export class MainScene extends g.Scene {
         return this.__bulletQueue;
     }
 
+    get _flyFactory(): FlyFactory {
+        if (!this.__flyFactory) {
+            throw new Error("flyFactory isn't defined.");
+        }
+        return this.__flyFactory;
+    }
+
     get _bulletFactory(): BulletFactory {
         if (!this.__bulletFactory) {
             throw new Error("bulletFactory isn't defined.");
@@ -253,11 +355,18 @@ export class MainScene extends g.Scene {
         return this.__bulletFactory;
     }
 
+    get _plainMatrixSerializer(): PlainMatrixSerializer {
+        if (!this.__plainMatrixSerializer) {
+            this.__plainMatrixSerializer = new PlainMatrixSerializer();
+        }
+        return this.__plainMatrixSerializer;
+    }
+
     get _cannonSerializer(): CannonEntitySerializer {
         if (!this.__cannonSerializer) {
             this.__cannonSerializer = new CannonEntitySerializer({
                 scene: this,
-                plainMatrixSerializer: new PlainMatrixSerializer(),
+                plainMatrixSerializer: this._plainMatrixSerializer,
             });
         }
         return this.__cannonSerializer;
@@ -277,5 +386,22 @@ export class MainScene extends g.Scene {
             throw new Error("bulletSerializer isn't defined.");
         }
         return this.__bulletSerializer;
+    }
+
+    get _flySerializer(): FlyEntitySerializer {
+        if (!this.__flySerializer) {
+            throw new Error("flySerializer isn't defined.");
+        }
+        return this.__flySerializer;
+    }
+
+    get _layerSerializer(): LayerEntitySerializer {
+        if (!this.__layerSerializer) {
+            this.__layerSerializer = new LayerEntitySerializer({
+                scene: this,
+                plainMatrixSerializer: this._plainMatrixSerializer,
+            });
+        }
+        return this.__layerSerializer;
     }
 }

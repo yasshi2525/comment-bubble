@@ -4,16 +4,14 @@ import { Dynamics, Common } from "box2dweb";
 import { BulletEntity } from "./entityBullet";
 import { CannonEntity } from "./entityCannon";
 import { TypedEBody } from "../typings/akashic-box2d";
+import { safeCos, safeSin } from "./math";
 
 export interface BulletFactoryParameterObject {
     scene: g.Scene;
     box2d: Box2D;
     controllers: ReadonlyArray<Dynamics.Controllers.b2Controller>;
-    /**
-     * N
-     */
-    initialPower: number;
     cannon: CannonEntity;
+    layer: g.E;
     characterFont: g.Font;
 }
 
@@ -28,16 +26,16 @@ export class BulletFactory {
     readonly scene: g.Scene;
     readonly box2d: Box2D;
     readonly controllers: ReadonlyArray<Dynamics.Controllers.b2Controller>;
-    readonly initialPower: number;
     readonly cannon: CannonEntity;
+    readonly layer: g.E;
     readonly characterFont: g.Font;
 
     constructor(param: BulletFactoryParameterObject) {
         this.scene = param.scene;
         this.box2d = param.box2d;
         this.controllers = param.controllers;
-        this.initialPower = param.initialPower;
         this.cannon = param.cannon;
+        this.layer = param.layer;
         this.characterFont = param.characterFont;
     }
 
@@ -45,18 +43,19 @@ export class BulletFactory {
         const ebody = this.box2d.createBody(
             new BulletEntity({
                 scene: this.scene,
-                parent: this.scene,
+                parent: this.layer,
                 font: this.characterFont,
                 anchorX: 0.5,
                 anchorY: 0.5,
                 x: this.cannon.center.x,
                 y: this.cannon.center.y,
+                maxHP: style(this.scene).bullet.maxHP,
+                initialHP: style(this.scene).bullet.maxHP,
                 ...param,
             }),
             this.box2d.createBodyDef(style(this.scene).bullet.body),
             this.box2d.createFixtureDef({
                 ...style(this.scene).bullet.fixture,
-                userData: "bullet",
                 shape: this.box2d.createCircleShape(style(this.scene).bullet.radius * 2),
             })
         )!;
@@ -66,8 +65,8 @@ export class BulletFactory {
         ebody.b2Body.ApplyImpulse(
             // cannon の回転角は反時計回りを正としているため時計回りに補正
             new Common.Math.b2Vec2(
-                Math.cos(-this.cannon._angle) * this.initialPower,
-                Math.sin(-this.cannon._angle) * this.initialPower
+                safeCos(-this.cannon._angle) * style(this.scene).cannon.fire.power,
+                safeSin(-this.cannon._angle) * style(this.scene).cannon.fire.power
             ),
             ebody.b2Body.GetWorldCenter());
         return ebody;
