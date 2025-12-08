@@ -40,6 +40,9 @@ export class Constants {
                         y: Math.max(scene.asset.getImageById("active-user-label").height, scene.asset.getImageById("numeric").height) / 2,
                         local: true,
                     } satisfies Omit<g.EParameterObject, "scene">,
+                    label: {
+                        padding: 10,
+                    },
                 },
             },
             comment: {

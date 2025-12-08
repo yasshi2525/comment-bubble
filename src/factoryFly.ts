@@ -4,6 +4,7 @@ import { TypedEBody } from "../typings/akashic-box2d";
 import { FlyEntity } from "./entityFly";
 import { Dynamics } from "box2dweb";
 import { safeCos, safeSin } from "./math";
+import { safePlay } from "./playAudio";
 
 export interface FlyFactoryParameterObject {
     scene: g.Scene;
@@ -13,7 +14,7 @@ export interface FlyFactoryParameterObject {
 }
 
 export class FlyFactory {
-    static readonly assets: string[] = [...FlyEntity.assets];
+    static readonly assets: string[] = [...FlyEntity.assets, "ufo-spawn"];
     readonly onCreate: g.Trigger<FlyEntity> = new g.Trigger();
     readonly controllers: ReadonlyArray<Dynamics.Controllers.b2Controller>;
     readonly scene: g.Scene;
@@ -85,6 +86,7 @@ export class FlyFactory {
             ]
         )!;
         this._initMovability(ebody);
+        safePlay(this.scene, "ufo-spawn");
         this.onCreate.fire(ebody.entity);
         return ebody;
     }

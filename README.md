@@ -1,7 +1,7 @@
 # コメントを打たれる撃たれるとツール (フリー版)
 
 * https://namagame.coe.nicovideo.jp/games/lg12187 のソースコードです
-* ライセンスのため一部の画像と音声データが公開版と異なります。
+* ライセンスのため一部の画像と音声データが公開版と異なります。（無音データが格納されています。）
 
 # インストール方法・動作確認方法
 
@@ -23,7 +23,7 @@ npm start
 # License
 
 * Source code: [MIT License](./LICENSE)
-* Rendered images: Creative Commons Attribution 4.0 International ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/))
+* Rendered images, audios: Creative Commons Attribution 4.0 International ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/))
 
 # Credit
 

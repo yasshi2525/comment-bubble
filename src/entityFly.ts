@@ -2,6 +2,7 @@ import { DeferrableComponentEntity } from "./componentdeferrable";
 import { MutableComponentEntity } from "./componentMutable";
 import { FlashMutableComponent, FlashMutableComponentParameterObject } from "./componentMutableFlash";
 import { safeCos, safeSin } from "./math";
+import { safePlay } from "./playAudio";
 import { Constants } from "./style";
 
 export interface FlyEntityParameterObject extends Omit<g.SpriteParameterObject, "src">, Omit<FlashMutableComponentParameterObject, "onUpdate"> {
@@ -16,7 +17,7 @@ export interface FlyEntityParameterObject extends Omit<g.SpriteParameterObject, 
 }
 
 export class FlyEntity extends g.Sprite implements MutableComponentEntity, DeferrableComponentEntity {
-    static readonly assets: string[] = ["ufo", "ufo-shape1", "ufo-shape2", "ufo-shape3"];
+    static readonly assets: string[] = ["ufo", "ufo-shape1", "ufo-shape2", "ufo-shape3", "ufo-damage"];
     readonly mutableComponent: FlashMutableComponent;
     readonly _standardY: number;
     direction: "left" | "right";
@@ -88,6 +89,7 @@ export class FlyEntity extends g.Sprite implements MutableComponentEntity, Defer
             power.width = (frame.width - Constants.fly.statusBar.frame.padding * 2)
                 * this.mutableComponent.hp / this.mutableComponent.maxHP;
             power.modified();
+            safePlay(this.scene, "ufo-damage");
         });
         this.onUpdate.add(() => {
             const oldFrameAngle = frame.angle;

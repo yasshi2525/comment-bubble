@@ -1,3 +1,5 @@
+import { Constants } from "./style";
+
 export interface ActiveUserNumLabelParameterObject extends g.EParameterObject {
     initialNumber?: number;
     font: g.Font;
@@ -18,7 +20,7 @@ export class ActiveUserNumLabel extends g.E {
             parent: this,
             font: param.font,
             text: this._num.toString(),
-            x: this.width,
+            x: this.width - Constants.game.active.label.padding,
             y: this.height / 2,
             anchorX: 1,
             anchorY: 0.5,
@@ -28,7 +30,7 @@ export class ActiveUserNumLabel extends g.E {
             scene: this.scene,
             parent: this,
             src: this.scene.asset.getImageById("active-user-label"),
-            x: this.width - this._body.width,
+            x: this.width - this._body.width - Constants.game.active.label.padding * 2,
             y: this.height / 2,
             anchorX: 1,
             anchorY: 0.5,
@@ -49,8 +51,8 @@ export class ActiveUserNumLabel extends g.E {
             this._body.invalidate();
         }
         if (oldBodyWidth !== this._body.width) {
-            this._prefix.x = this.width - this._body.width;
-            this.modified();
+            this._prefix.x = this.width - this._body.width - Constants.game.active.label.padding * 2;
+            this._prefix.modified();
         }
     }
 }

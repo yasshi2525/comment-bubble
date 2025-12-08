@@ -210,14 +210,14 @@
 		"active-user-label": {
 			"type": "image",
 			"path": "image/active-user-label.png",
-			"width": 137,
-			"height": 40
+			"width": 188,
+			"height": 52
 		},
 		"numeric": {
 			"type": "image",
 			"path": "image/numeric.png",
-			"width": 380,
-			"height": 49
+			"width": 640,
+			"height": 91
 		},
 		"numeric-glyph": {
 			"type": "text",
@@ -252,6 +252,47 @@
 			"type": "script",
 			"path": "script/senderHeartbeat.js",
 			"global": true
+		},
+		"ufo-spawn": {
+			"type": "audio",
+			"path": "audio/ufo-spawn",
+			"systemId": "sound",
+			"duration": 1000,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"ufo-explosion": {
+			"type": "audio",
+			"path": "audio/ufo-explosion",
+			"systemId": "sound",
+			"duration": 1000,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"playAudio": {
+			"type": "script",
+			"path": "script/playAudio.js",
+			"global": true
+		},
+		"ufo-damage": {
+			"type": "audio",
+			"path": "audio/ufo-damage",
+			"systemId": "sound",
+			"duration": 1000,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
 		}
 	},
 	"environment": {

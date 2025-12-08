@@ -1,4 +1,5 @@
 import { ExplosionEntity } from "./entityExplosion";
+import { safePlay } from "./playAudio";
 import { Constants } from "./style";
 
 export interface ExplosionFactoryParameterObject {
@@ -12,7 +13,7 @@ export interface ExplosionEntityParameterObject {
 }
 
 export class ExplosionFactory {
-    static readonly assets: string[] = [...ExplosionEntity.assets];
+    static readonly assets: string[] = [...ExplosionEntity.assets, "ufo-explosion"];
     readonly scene: g.Scene;
     readonly layer: g.E;
     constructor(param: ExplosionFactoryParameterObject) {
@@ -28,6 +29,7 @@ export class ExplosionFactory {
             ...Constants.explosion.entity,
         });
         entity.start();
+        safePlay(this.scene, "ufo-explosion");
         return entity;
     }
 }
