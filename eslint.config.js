@@ -5,7 +5,7 @@ import * as tsParser from "@typescript-eslint/parser";
 /** @type {import("eslint").Linter.Config} */
 export default [
     {
-        ignores: ["script/**/*.js", "coverage"],
+        ignores: ["script/**/*.js", "resource/script/**/*.js", "coverage"],
     },
     stylistic.configs.customize({
         indent: 4,

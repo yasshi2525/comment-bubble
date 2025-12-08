@@ -1,4 +1,4 @@
-import { style } from "./style";
+import { Constants } from "./style";
 
 export interface CanonnEntityParameterObject extends Omit<g.FilledRectParameterObject, "cssColor" | "width" | "height"> {
     /**
@@ -50,8 +50,8 @@ export class CannonEntity extends g.E {
     constructor(param: CanonnEntityParameterObject) {
         super({
             ...param,
-            width: style(param.scene).cannon.entity.width,
-            height: style(param.scene).cannon.entity.height,
+            width: Constants.cannon.entity.width,
+            height: Constants.cannon.entity.height,
         });
         if (!Number.isInteger(param.firingInterval)) {
             throw new Error(`firingInterval should be integer. (actual = ${param.firingInterval})`);
@@ -97,6 +97,7 @@ export class CannonEntity extends g.E {
             angle: this._toBodyAngle(),
             anchorX: 0.5,
             anchorY: 0.5,
+            local: true,
         });
         this._base = new g.Sprite({
             scene: this.scene,
@@ -106,6 +107,7 @@ export class CannonEntity extends g.E {
             y: this.height / 2,
             anchorX: 0.5,
             anchorY: 0.5,
+            local: true,
         });
 
         this._isStarted = false;
@@ -125,7 +127,7 @@ export class CannonEntity extends g.E {
         if (this._isStarted) {
             throw new Error("cannon is already started.");
         }
-        this.onUpdate.add(this._handleTick.bind(this));
+        this.onUpdate.add(this._handleTick, this);
         this._isStarted = true;
     }
 

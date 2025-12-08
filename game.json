@@ -172,6 +172,86 @@
 			"type": "script",
 			"path": "script/math.js",
 			"global": true
+		},
+		"ufo": {
+			"type": "image",
+			"path": "image/ufo.png",
+			"width": 250,
+			"height": 250
+		},
+		"ufo-shape1": {
+			"type": "text",
+			"path": "text/ufo-shape1.json"
+		},
+		"ufo-shape2": {
+			"type": "text",
+			"path": "text/ufo-shape2.json"
+		},
+		"ufo-shape3": {
+			"type": "text",
+			"path": "text/ufo-shape3.json"
+		},
+		"explosion": {
+			"type": "image",
+			"path": "image/explosion.png",
+			"width": 3750,
+			"height": 250
+		},
+		"entityExplosion": {
+			"type": "script",
+			"path": "script/entityExplosion.js",
+			"global": true
+		},
+		"factoryExplosion": {
+			"type": "script",
+			"path": "script/factoryExplosion.js",
+			"global": true
+		},
+		"active-user-label": {
+			"type": "image",
+			"path": "image/active-user-label.png",
+			"width": 137,
+			"height": 43
+		},
+		"numeric": {
+			"type": "image",
+			"path": "image/numeric.png",
+			"width": 380,
+			"height": 53
+		},
+		"numeric-glyph": {
+			"type": "text",
+			"path": "text/numeric-glyph.json"
+		},
+		"entityActiveUserNum": {
+			"type": "script",
+			"path": "script/entityActiveUserNum.js",
+			"global": true
+		},
+		"listenerActiveUserNum": {
+			"type": "script",
+			"path": "script/listenerActiveUserNum.js",
+			"global": true
+		},
+		"listenerHeartbeat": {
+			"type": "script",
+			"path": "script/listenerHeartbeat.js",
+			"global": true
+		},
+		"parameterHeartbeat": {
+			"type": "script",
+			"path": "script/parameterHeartbeat.js",
+			"global": true
+		},
+		"senderActiveUserNum": {
+			"type": "script",
+			"path": "script/senderActiveUserNum.js",
+			"global": true
+		},
+		"senderHeartbeat": {
+			"type": "script",
+			"path": "script/senderHeartbeat.js",
+			"global": true
 		}
 	},
 	"environment": {

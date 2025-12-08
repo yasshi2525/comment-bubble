@@ -22,7 +22,7 @@ export class BulletQueue {
     constructor(param: BulletQueueParameterObject) {
         this._queue = [...param.initialQueue];
         this.cannon = param.cannon;
-        this.cannon.onFire.add(this._handleFire.bind(this));
+        this.cannon.onFire.add(this._handleFire, this);
     }
 
     append(event: FireEvent | null): void {

@@ -6,7 +6,7 @@
     "author": "yasshi2525",
     "type": "module",
     "scripts": {
-        "postinstall": "npm run build",
+        "postinstall": "npm run build && npm run update",
         "build": "rimraf ./script && tsc && akashic scan asset script",
         "build:watch": "tsc -w",
         "update": "akashic scan asset && akashic scan globalScripts",
@@ -35,7 +35,7 @@
     },
     "dependencies": {
         "@akashic-extension/akashic-box2d": "^3.1.3",
-        "@yasshi2525/akashic-box2d-serializer": "^0.2.0",
+        "@yasshi2525/akashic-box2d-serializer": "^0.2.1",
         "grapheme-splitter": "^1.0.4"
     }
 }

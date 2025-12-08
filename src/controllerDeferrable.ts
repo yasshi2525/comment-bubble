@@ -7,7 +7,7 @@ const afterStepInvocations: AfterStepInvocation[] = [];
 
 Box2D.prototype.step = new Proxy(Box2D.prototype.step, {
     apply(target, thisArg, argArray: Parameters<Box2D["step"]>) {
-        target.bind(thisArg)(...argArray);
+        target.call(thisArg, ...argArray);
         let cb: AfterStepInvocation | undefined;
         while ((cb = afterStepInvocations.shift())) {
             cb();
@@ -20,7 +20,7 @@ export abstract class DeferrableController extends Dynamics.Controllers.b2Contro
         super();
         this.Step = new Proxy(this.Step, {
             apply: (target, thisArg, argArray: Parameters<DeferrableController["Step"]>) => {
-                const result = target.bind(thisArg)(...argArray);
+                const result = target.call(thisArg, ...argArray);
                 if (result) {
                     afterStepInvocations.push(result);
                 }

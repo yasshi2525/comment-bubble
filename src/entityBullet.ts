@@ -30,6 +30,7 @@ export class BulletEntity extends g.Sprite implements MutableComponentEntity {
             y: this.height / 2,
             anchorX: 0.5,
             anchorY: 0.5,
+            local: true,
         });
         this.append(label);
     }

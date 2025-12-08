@@ -2,6 +2,7 @@ import type { NamagameCommentEventComment } from "@akashic/akashic-cli-serve/lib
 import GraphemeSplitter = require("grapheme-splitter");
 import { BulletQueue } from "./queueBullet";
 import { BroadcasterResolver } from "./resolverBroadcaster";
+import { Constants } from "./style";
 
 export interface CommentListenerParameterObject {
     scene: g.Scene;
@@ -32,7 +33,7 @@ export class CommentListener {
         if (this._isStarted) {
             throw new Error("comment listener was already started.");
         }
-        this._scene.onMessage.add(this._handleMessage.bind(this));
+        this._scene.onMessage.add(this._handleMessage, this);
         this._isStarted = true;
     }
 
@@ -52,16 +53,31 @@ export class CommentListener {
         if (this._ignoresComment(ev.comment)) {
             return;
         }
+        // 長過ぎるコメントは省略するため、投擲数をカウントする。
+        let length = 0;
+        // 連続した文字を拒否するため、過去に処理した文字を記憶しておく。
+        const cache: string[] = [];
         // 左側から順番に投射するので、逆順に装填することで見た目の並びを一致させる
         for (const character of this._splitter.splitGraphemes(ev.comment).reverse()) {
             if (this._ignoresCharacter(character)) {
                 continue;
             }
+            if (cache.length === Constants.comment.accept.max.sameCharacters && cache.every(prev => prev === character)) {
+                continue;
+            }
             this._bulletQueue.append({
-                character,
+                character: length < Constants.comment.accept.max.length ? character : "(ry",
                 commentID: this._resolveCommentID(ev),
                 isSelfComment: this._isSelfComment(ev),
             });
+            if (length >= Constants.comment.accept.max.length) {
+                break;
+            }
+            cache.push(character);
+            if (cache.length > Constants.comment.accept.max.sameCharacters) {
+                cache.shift();
+            }
+            length++;
         }
         // コメントが続くと切れ目がわからないのでスキマをあける
         this._bulletQueue.append(null);
@@ -71,14 +87,14 @@ export class CommentListener {
      * AA など実コメントと思われないものを除外する。改行のあるものを除外
      */
     _ignoresComment(comment: string): boolean {
-        return comment.indexOf("\n") !== -1;
+        return Constants.comment.reject.multiline && comment.indexOf("\n") !== -1;
     }
 
     /**
      * 空白文字が入っていると読みづらいので除外
      */
     _ignoresCharacter(character: string): boolean {
-        return character.trim().length === 0;
+        return Constants.comment.reject.whitespace && character.trim().length === 0;
     }
 
     _resolveCommentID(ev: NamagameCommentEventComment): string | undefined {

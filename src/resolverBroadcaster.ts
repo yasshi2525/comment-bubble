@@ -12,6 +12,10 @@ export class BroadcasterResolver {
         });
     }
 
+    restoreBroadcasterID(id?: string): void {
+        this._broadcasterID = id;
+    }
+
     getResolvedBroadcasterID(): string | undefined {
         return this._broadcasterID;
     }

@@ -41,8 +41,8 @@ export class FlashMutableComponent extends MutableComponent {
         this.duration = param.duration;
         this.remain = param.initialTimeout;
         this._onUpdate = param.onUpdate;
-        this.onAttack.add(this._start.bind(this));
-        this._onUpdate.add(this._handleFlash.bind(this));
+        this.onAttack.add(this._start, this);
+        this._onUpdate.add(this._handleFlash, this);
         if (this.remain > 0) {
             this._fireEffect();
         }
@@ -54,6 +54,10 @@ export class FlashMutableComponent extends MutableComponent {
             duration: param.duration,
             initialTimeout: param.initialTimeout,
         };
+    }
+
+    isFlashing(): boolean {
+        return (this.duration - this.remain) % 2 === 0;
     }
 
     _start(): void {
@@ -69,7 +73,7 @@ export class FlashMutableComponent extends MutableComponent {
     }
 
     _fireEffect(): void {
-        this.onEffect.fire((this.duration - this.remain) % 2 === 0);
+        this.onEffect.fire(this.isFlashing());
     }
 
     override serialize(): FlashMutableComponentParam {

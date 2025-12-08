@@ -1,13 +1,13 @@
 import { Box2DWeb, EBody } from "@akashic-extension/akashic-box2d";
 
-interface TypedEBody<T extends g.E> extends EBody {
+export interface TypedEBody<T extends g.E> extends EBody {
     /**
       * Akashicのエンティティ。
       */
     entity: T;
 }
 
-interface SimpleMath {
+export interface SimpleMath {
     sin: typeof Math.sin;
     cos: typeof Math.cos;
 }
@@ -26,5 +26,3 @@ declare module "@akashic-extension/akashic-box2d" {
         }
     }
 }
-
-export { TypedEBody };

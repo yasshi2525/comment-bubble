@@ -1,5 +1,5 @@
 import { BodyType, Box2D } from "@akashic-extension/akashic-box2d";
-import { style } from "./style";
+import { Constants } from "./style";
 import { TypedEBody } from "../typings/akashic-box2d";
 
 export interface WorldHorizonFactoryParameterObject {
@@ -24,7 +24,7 @@ export class WorldHorizonFactory {
     }
 
     newInstarnce(): WorldHorizon {
-        const size = style(this.scene).boundary.size;
+        const size = Constants.boundary.size;
         return {
             top: this._newBoundary({ x: 0, y: -size, width: g.game.width, height: size }),
             right: this._newBoundary({ x: g.game.width + size, y: 0, width: size, height: g.game.height }),
@@ -46,7 +46,7 @@ export class WorldHorizonFactory {
                 type: BodyType.Static,
             }),
             this.box2d.createFixtureDef({
-                ...style(this.scene).boundary.fixture,
+                ...Constants.boundary.fixture,
                 shape: this.box2d.createRectShape(entity.width, entity.height),
             })
         ) as TypedEBody<g.FilledRect>;

@@ -1,6 +1,6 @@
-import { Box2D, Box2DWeb } from "@akashic-extension/akashic-box2d";
+import { Box2D } from "@akashic-extension/akashic-box2d";
 import { patchBox2D, patchBox2DMath } from "@akashic-extension/akashic-box2d/patch";
-import { style } from "./style";
+import { Constants } from "./style";
 import { HorizonController } from "./controllerHorizon";
 import { KillController } from "./controllerKill";
 import { initMath } from "./math";
@@ -23,7 +23,7 @@ export class Box2DFactory {
     }
 
     newInstance(): Box2DNewInstanceResult {
-        const { gravity, scale } = style(this.scene).world;
+        const { gravity, scale } = Constants.world;
         const box2d = new Box2D({
             gravity: [0, gravity],
             scale,

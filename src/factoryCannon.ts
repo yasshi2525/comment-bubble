@@ -1,5 +1,5 @@
 import { CannonEntity } from "./entityCannon";
-import { style } from "./style";
+import { Constants } from "./style";
 
 export interface CannonFactoryParameterObject {
     scene: g.Scene;
@@ -19,14 +19,14 @@ export class CannonFactory {
         const entity = new CannonEntity({
             scene: this.scene,
             parent: this.layer,
-            ...style(this.scene).cannon.entity,
-            firingInterval: Math.ceil(style(this.scene).cannon.fire.interval / 1000 * g.game.fps),
+            ...Constants.cannon.entity,
+            firingInterval: Math.ceil(Constants.cannon.fire.interval / 1000 * g.game.fps),
             initialDelay: 0,
-            lowestAngle: style(this.scene).cannon.angle.min / 180 * Math.PI,
-            highestAngle: style(this.scene).cannon.angle.max / 180 * Math.PI,
-            initialAngle: style(this.scene).cannon.angle.initial / 180 * Math.PI,
-            rotationSpeed: style(this.scene).cannon.rotation.speed / 180 * Math.PI / g.game.fps,
-            initialDirection: style(this.scene).cannon.rotation.direction,
+            lowestAngle: Constants.cannon.angle.min / 180 * Math.PI,
+            highestAngle: Constants.cannon.angle.max / 180 * Math.PI,
+            initialAngle: Constants.cannon.angle.initial / 180 * Math.PI,
+            rotationSpeed: Constants.cannon.rotation.speed / 180 * Math.PI / g.game.fps,
+            initialDirection: Constants.cannon.rotation.direction,
             preventAutoStart,
         });
         return entity;

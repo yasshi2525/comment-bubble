@@ -1,5 +1,5 @@
 import { Box2D, EBody } from "@akashic-extension/akashic-box2d";
-import { style } from "./style";
+import { Constants } from "./style";
 import { Dynamics, Common } from "box2dweb";
 import { BulletEntity } from "./entityBullet";
 import { CannonEntity } from "./entityCannon";
@@ -49,14 +49,14 @@ export class BulletFactory {
                 anchorY: 0.5,
                 x: this.cannon.center.x,
                 y: this.cannon.center.y,
-                maxHP: style(this.scene).bullet.maxHP,
-                initialHP: style(this.scene).bullet.maxHP,
+                maxHP: Constants.bullet.maxHP,
+                initialHP: Constants.bullet.maxHP,
                 ...param,
             }),
-            this.box2d.createBodyDef(style(this.scene).bullet.body),
+            this.box2d.createBodyDef(Constants.bullet.body),
             this.box2d.createFixtureDef({
-                ...style(this.scene).bullet.fixture,
-                shape: this.box2d.createCircleShape(style(this.scene).bullet.radius * 2),
+                ...Constants.bullet.fixture,
+                shape: this.box2d.createCircleShape(Constants.bullet.radius * 2),
             })
         )!;
         for (const controller of this.controllers) {
@@ -65,8 +65,8 @@ export class BulletFactory {
         ebody.b2Body.ApplyImpulse(
             // cannon の回転角は反時計回りを正としているため時計回りに補正
             new Common.Math.b2Vec2(
-                safeCos(-this.cannon._angle) * style(this.scene).cannon.fire.power,
-                safeSin(-this.cannon._angle) * style(this.scene).cannon.fire.power
+                safeCos(-this.cannon._angle) * Constants.cannon.fire.power,
+                safeSin(-this.cannon._angle) * Constants.cannon.fire.power
             ),
             ebody.b2Body.GetWorldCenter());
         return ebody;

@@ -1,10 +1,10 @@
-import { EntitySerializerParameterObject, FilledRectParam, FilledRectSerializer, ObjectDef, ObjectSerializer } from "@yasshi2525/akashic-box2d-serializer";
+import { ObjectDef, ObjectSerializer, SpriteParam, SpriteSerializer, SpriteSerializerParameterObject } from "@yasshi2525/akashic-box2d-serializer";
 import { FlyEntity } from "./entityFly";
 import { FlashMutableComponent, FlashMutableComponentParam } from "./componentMutableFlash";
 
 export const flyType = FlyEntity.name;
 
-export interface FlyEntityParam extends FilledRectParam, FlashMutableComponentParam {
+export interface FlyEntityParam extends SpriteParam, FlashMutableComponentParam {
     standardY: number;
     direction: "left" | "right";
     floating: "up" | "idle" | "down";
@@ -12,10 +12,10 @@ export interface FlyEntityParam extends FilledRectParam, FlashMutableComponentPa
     deltaAngle: number;
 }
 
-export interface FlyEntitySerializerParameterObject extends Omit<EntitySerializerParameterObject, "entitySerializers"> {
+export interface FlyEntitySerializerParameterObject extends Omit<SpriteSerializerParameterObject, "entitySerializers"> {
 }
 
-export class FlyEntitySerializer extends FilledRectSerializer implements ObjectSerializer<FlyEntity, FlyEntityParam> {
+export class FlyEntitySerializer extends SpriteSerializer implements ObjectSerializer<FlyEntity, FlyEntityParam> {
     constructor(param: FlyEntitySerializerParameterObject) {
         super({
             ...param,

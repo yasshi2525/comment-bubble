@@ -1,6 +1,6 @@
 import { Box2DFactory } from "./factoryBox2D";
 import { CommentListener } from "./listenerComment";
-import { style } from "./style";
+import { Constants } from "./style";
 import { WorldHorizonFactory } from "./factoryWorldHorizon";
 import { BulletFactory } from "./factoryBullet";
 import { SnapshotParameterObject } from "./parameterSnapshot";
@@ -8,7 +8,7 @@ import { CannonFactory } from "./factoryCannon";
 import { BulletQueue } from "./queueBullet";
 import { connectFireEvent } from "./connectorFireEvent";
 import { CannonEntity } from "./entityCannon";
-import { Box2DSerializer, ObjectDef, PlainMatrixSerializer } from "@yasshi2525/akashic-box2d-serializer";
+import { Box2DSerializer, FrameSpriteParam, FrameSpriteSerializer, ImageAssetSerializer, ObjectDef, PlainMatrixSerializer } from "@yasshi2525/akashic-box2d-serializer";
 import { CannonEntityParam, CannonEntitySerializer } from "./serializerEntityCannon";
 import { BulletQueueParam, BulletQueueSerializer } from "./serializerQueueBullet";
 import { BroadcasterResolver } from "./resolverBroadcaster";
@@ -21,6 +21,13 @@ import { FlyFactory } from "./factoryFly";
 import { KillController } from "./controllerKill";
 import { FlyEntitySerializer } from "./serializerEntityFly";
 import { isDeferrableComponentEBody } from "./componentdeferrable";
+import { ExplosionEntity } from "./entityExplosion";
+import { ExplosionFactory } from "./factoryExplosion";
+import { ActiveUserNumLabel } from "./entityActiveUserNum";
+import { ActiveUserNumSender } from "./senderActiveUserNum";
+import { HeartbeatListener } from "./listenerHeartbeat";
+import { ActiveUserNumListener } from "./listenerActiveUserNum";
+import { HeartbeatSender } from "./senderHeartbeat";
 
 export interface MainSceneParameterObject extends g.SceneParameterObject {
     snapshot?: SnapshotParameterObject;
@@ -28,11 +35,20 @@ export interface MainSceneParameterObject extends g.SceneParameterObject {
 }
 
 export class MainScene extends g.Scene {
-    static readonly assets: string[] = [...BulletFactory.assets, ...CannonFactory.assets];
+    static readonly assets: string[] = [
+        "numeric", "numeric-glyph",
+        ...ActiveUserNumLabel.assets,
+        ...BulletFactory.assets,
+        ...CannonFactory.assets,
+        ...FlyFactory.assets,
+        ...ExplosionFactory.assets,
+    ];
+
     readonly _broadcasterResolver: BroadcasterResolver;
     readonly _snapshot?: SnapshotParameterObject;
     private __tick?: number;
     private __characterFont?: g.Font;
+    private __numericFont?: g.Font;
     private __backgroundLayer?: g.E;
     private __foregroundLayer?: g.E;
     private __box2d?: Box2D;
@@ -41,14 +57,19 @@ export class MainScene extends g.Scene {
     private __box2dSerializer?: Box2DSerializer;
     private __cannon?: CannonEntity;
     private __bulletQueue?: BulletQueue;
+    private __explosions?: ExplosionEntity[];
     private __bulletFactory?: BulletFactory;
     private __flyFactory?: FlyFactory;
+    private __explosionFactory?: ExplosionFactory;
     private __plainMatrixSerializer?: PlainMatrixSerializer;
+    private __imageAssetSerializer?: ImageAssetSerializer;
     private __cannonSerializer?: CannonEntitySerializer;
     private __bulletQueueSerializer?: BulletQueueSerializer;
     private __bulletSerializer?: BulletEntitySerializer;
     private __flySerializer?: FlyEntitySerializer;
+    private __explosionSerializer?: FrameSpriteSerializer;
     private __layerSerializer?: LayerEntitySerializer;
+    private __activeUserNumSender?: ActiveUserNumSender;
 
     constructor(param: MainSceneParameterObject) {
         super({
@@ -57,17 +78,22 @@ export class MainScene extends g.Scene {
         });
         this._broadcasterResolver = param.broadcasterResolver;
         this._snapshot = param.snapshot;
-        this.onLoad.add(this._handleLoad.bind(this));
+        if (this._snapshot) {
+            this._broadcasterResolver.restoreBroadcasterID(this._snapshot.broadcasterID);
+        }
+        this.onLoad.add(this._handleLoad, this);
     }
 
     _handleLoad(): void {
+        Constants.init(this);
         this._initializeTickCounter();
-        this._initializeCharacterFont();
+        this._initializeFont();
         this._initializeLayer();
         this._initializeBox2D();
         this._initializeBox2dSerializer();
         this._initializeBackground();
         this._restoreEBodies();
+        this._initializeActiveUserCounter();
         this._initializeCommentReceptor();
         this._initializeSnapshotRequest();
     }
@@ -79,8 +105,13 @@ export class MainScene extends g.Scene {
         });
     }
 
-    _initializeCharacterFont() {
-        return this.__characterFont = new g.DynamicFont(style(this).character.font);
+    _initializeFont() {
+        const characterFont = this.__characterFont = new g.DynamicFont(Constants.character.font);
+        const numericFont = this.__numericFont = new g.BitmapFont({
+            src: this.asset.getImageById("numeric"),
+            glyphInfo: this.asset.getJSONContentById("numeric-glyph"),
+        });
+        return { characterFont, numericFont };
     }
 
     _initializeLayer() {
@@ -152,6 +183,7 @@ export class MainScene extends g.Scene {
         this.__flySerializer = new FlyEntitySerializer({
             scene: this,
             plainMatrixSerializer: this._box2dSerializer._plainMatrixSerializer,
+            imageAssetSerializer: this._box2dSerializer._imageAssetSerializer,
         });
         this.__box2dSerializer._entitySerializers.push(this.__flySerializer);
         return this.__box2dSerializer;
@@ -161,6 +193,7 @@ export class MainScene extends g.Scene {
         this._initializeWorldHorizon();
         const cannon = this._getCannon();
         const bulletQueue = this._getBulletQueue(cannon);
+        const explosions = this._getExplosions();
         this.__bulletFactory = new BulletFactory({
             scene: this,
             box2d: this._box2d,
@@ -175,11 +208,60 @@ export class MainScene extends g.Scene {
             controllers: [this._killController],
             layer: this._backgroundLayer,
         });
+        this.__explosionFactory = new ExplosionFactory({
+            scene: this,
+            layer: this._foregroundLayer,
+        });
+        this._flyFactory.onCreate.add((f) => {
+            f.mutableComponent.onKill.add(() => {
+                const obj = this._explosionFactory.newInstance({ x: f.x, y: f.y });
+                obj.onFinish.add(() => {
+                    explosions.splice(explosions.indexOf(obj), 1);
+                });
+                explosions.push(obj);
+            });
+        });
         return {
             cannon,
             bulletQueue,
             bulletFactory: this.__bulletFactory,
         };
+    }
+
+    _initializeActiveUserCounter(): void {
+        if (g.game.isActiveInstance()) {
+            const activeUserNumSender = this.__activeUserNumSender = new ActiveUserNumSender({
+                scene: this,
+                tick: () => this._tick,
+            });
+            const heartbeatListener = new HeartbeatListener({
+                scene: this,
+                tick: () => this._tick,
+                active: () => activeUserNumSender.activeNum(),
+            });
+            heartbeatListener.onDsync.add(() => activeUserNumSender.send());
+            heartbeatListener.onReceive.add(ev => activeUserNumSender.accept(ev));
+        }
+        else {
+            const activeUserNumLabel = new ActiveUserNumLabel({
+                scene: this,
+                parent: this._foregroundLayer,
+                initialNumber: this._snapshot?.activeUserNum,
+                font: this._numericFont,
+                ...Constants.game.active.entity,
+            });
+            const activeUserListener = new ActiveUserNumListener({
+                scene: this,
+            });
+            activeUserListener.onReceive.add((num) => {
+                activeUserNumLabel.num = num;
+            });
+            new HeartbeatSender({
+                scene: this,
+                tick: () => this._tick,
+                active: () => activeUserNumLabel.num,
+            });
+        }
     }
 
     _initializeCommentReceptor(): void {
@@ -233,6 +315,21 @@ export class MainScene extends g.Scene {
         return this._bulletQueueSerializer.deserialize(json);
     }
 
+    _getExplosions(): ExplosionEntity[] {
+        return this.__explosions = this._snapshot
+            ? this._restoreExplisions(this._snapshot.explosions)
+            : [];
+    }
+
+    _restoreExplisions(json: ObjectDef<FrameSpriteParam>[]): ExplosionEntity[] {
+        return json.map(p => this._explosionSerializer.deserialize(p)).map((e) => {
+            e.onFinish.add(() => {
+                this._explosions.splice(this._explosions.indexOf(e), 1);
+            });
+            return e;
+        });
+    }
+
     _restoreEBodies(): void {
         if (this._snapshot) {
             const ebodies = this._box2dSerializer.desrializeBodies(this._snapshot.box2d);
@@ -257,10 +354,13 @@ export class MainScene extends g.Scene {
                         },
                         cannon: this._cannonSerializer.serialize(this._cannon),
                         bulletQueue: this._bulletQueueSerializer.serialize(this._bulletQueue),
+                        broadcasterID: this._broadcasterResolver.getResolvedBroadcasterID(),
+                        explosions: this._explosions.map(e => this._explosionSerializer.serialize(e)),
+                        activeUserNum: this._activeUserNum,
                     } satisfies SnapshotParameterObject;
                     return { snapshot };
                 });
-            }, style(this).game.snapshot.interval);
+            }, Constants.game.snapshot.interval);
         }
     }
 
@@ -283,6 +383,13 @@ export class MainScene extends g.Scene {
             throw new Error("characterFont isn't defined.");
         }
         return this.__characterFont;
+    }
+
+    get _numericFont(): g.Font {
+        if (!this.__numericFont) {
+            throw new Error("numericFont isn't defined.");
+        }
+        return this.__numericFont;
     }
 
     get _backgroundLayer(): g.E {
@@ -341,6 +448,13 @@ export class MainScene extends g.Scene {
         return this.__bulletQueue;
     }
 
+    get _explosions(): ExplosionEntity[] {
+        if (!this.__explosions) {
+            throw new Error("explosions aren't defined");
+        }
+        return this.__explosions;
+    }
+
     get _flyFactory(): FlyFactory {
         if (!this.__flyFactory) {
             throw new Error("flyFactory isn't defined.");
@@ -355,11 +469,27 @@ export class MainScene extends g.Scene {
         return this.__bulletFactory;
     }
 
+    get _explosionFactory(): ExplosionFactory {
+        if (!this.__explosionFactory) {
+            throw new Error("explosionFactory isn't defined.");
+        }
+        return this.__explosionFactory;
+    }
+
     get _plainMatrixSerializer(): PlainMatrixSerializer {
         if (!this.__plainMatrixSerializer) {
             this.__plainMatrixSerializer = new PlainMatrixSerializer();
         }
         return this.__plainMatrixSerializer;
+    }
+
+    get _imageAssetSerializer(): ImageAssetSerializer {
+        if (!this.__imageAssetSerializer) {
+            this.__imageAssetSerializer = new ImageAssetSerializer({
+                scene: this,
+            });
+        }
+        return this.__imageAssetSerializer;
     }
 
     get _cannonSerializer(): CannonEntitySerializer {
@@ -395,6 +525,30 @@ export class MainScene extends g.Scene {
         return this.__flySerializer;
     }
 
+    get _explosionSerializer(): FrameSpriteSerializer {
+        if (!this.__explosionSerializer) {
+            this.__explosionSerializer = new class extends FrameSpriteSerializer {
+                override filter(objectType: string): boolean {
+                    return objectType === ExplosionEntity.name;
+                }
+
+                override deserialize(json: ObjectDef<FrameSpriteParam>): ExplosionEntity {
+                    const explosion = new ExplosionEntity(this._deserializeParameterObject(json.param));
+                    if (json.param.hasTimer) {
+                        explosion.start();
+                    }
+                    return explosion;
+                }
+            }({
+                scene: this,
+                entitySerializers: [],
+                imageAssetSerializer: this._imageAssetSerializer,
+                plainMatrixSerializer: this._plainMatrixSerializer,
+            });
+        }
+        return this.__explosionSerializer;
+    }
+
     get _layerSerializer(): LayerEntitySerializer {
         if (!this.__layerSerializer) {
             this.__layerSerializer = new LayerEntitySerializer({
@@ -403,5 +557,12 @@ export class MainScene extends g.Scene {
             });
         }
         return this.__layerSerializer;
+    }
+
+    get _activeUserNum(): number {
+        if (!this.__activeUserNumSender) {
+            throw new Error("activeUserNumSender isn't defined.");
+        }
+        return this.__activeUserNumSender.activeNum();
     }
 }
