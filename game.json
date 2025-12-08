@@ -211,13 +211,13 @@
 			"type": "image",
 			"path": "image/active-user-label.png",
 			"width": 137,
-			"height": 43
+			"height": 40
 		},
 		"numeric": {
 			"type": "image",
 			"path": "image/numeric.png",
 			"width": 380,
-			"height": 53
+			"height": 49
 		},
 		"numeric-glyph": {
 			"type": "text",
