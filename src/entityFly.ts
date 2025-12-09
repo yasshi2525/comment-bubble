@@ -14,12 +14,15 @@ export interface FlyEntityParameterObject extends Omit<g.SpriteParameterObject, 
     floating: "up" | "idle" | "down";
     rotating: "clockwise" | "idle" | "anticlockwise";
     deltaAngle: number;
+    flyNoFont: g.Font;
+    flyNo: number;
 }
 
 export class FlyEntity extends g.Sprite implements MutableComponentEntity, DeferrableComponentEntity {
     static readonly assets: string[] = ["ufo", "ufo-shape1", "ufo-shape2", "ufo-shape3", "ufo-damage"];
     readonly mutableComponent: FlashMutableComponent;
     readonly _standardY: number;
+    readonly _flyNo: number;
     direction: "left" | "right";
     floating: "up" | "idle" | "down";
     rotating: "clockwise" | "idle" | "anticlockwise";
@@ -30,11 +33,22 @@ export class FlyEntity extends g.Sprite implements MutableComponentEntity, Defer
         super({ ...param, src: param.scene.asset.getImageById("ufo") });
         this.mutableComponent = new FlashMutableComponent({ ...param, onUpdate: this.onUpdate });
         this._standardY = param.standardY ?? this.y;
+        this._flyNo = param.flyNo;
         this.direction = param.direction;
         this.floating = param.floating;
         this.rotating = param.rotating;
         this.deltaAngle = param.deltaAngle;
         this._beforeAngle = this.angle;
+        this.append(new g.Label({
+            scene: this.scene,
+            font: param.flyNoFont,
+            text: this._flyNo.toString(),
+            x: this.width / 2,
+            y: this.height / 4,
+            anchorX: 0.5,
+            anchorY: 1,
+            local: true,
+        }));
         const effect = new g.Sprite({
             scene: this.scene,
             parent: this,

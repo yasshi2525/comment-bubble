@@ -70,7 +70,7 @@ export class Constants {
                     /**
                      * N(度/s)
                      */
-                    rotate: 0.0002,
+                    rotate: 0.0005,
                 },
             },
             boundary: {
@@ -136,7 +136,7 @@ export class Constants {
                  * 度数
                  */
                 angle: {
-                    max: 85,
+                    max: 75,
                     initial: 30,
                     min: 20,
                 },
@@ -149,7 +149,10 @@ export class Constants {
                 },
             },
             fly: {
-                maxHP: 25,
+                hp: {
+                    initialMax: 15,
+                    poewerUpRate: 1.5,
+                },
                 /**
                  * px
                  */
@@ -185,7 +188,7 @@ export class Constants {
                         /**
                          * 度
                          */
-                        angle: 15,
+                        angle: 30,
                     },
                     /**
                      * これを下回ったら impluse 停止
@@ -198,7 +201,7 @@ export class Constants {
                         /**
                          * 度
                          */
-                        angle: 10,
+                        angle: 20,
                     },
                 },
                 /**
@@ -219,7 +222,7 @@ export class Constants {
                     /**
                      * N
                      */
-                    rotate: 0.01,
+                    rotate: 0.025,
                 },
                 entity: {
                     // fade in

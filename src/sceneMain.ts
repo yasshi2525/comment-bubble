@@ -184,6 +184,7 @@ export class MainScene extends g.Scene {
             scene: this,
             plainMatrixSerializer: this._box2dSerializer._plainMatrixSerializer,
             imageAssetSerializer: this._box2dSerializer._imageAssetSerializer,
+            flyNoFont: this._numericFont,
         });
         this.__box2dSerializer._entitySerializers.push(this.__flySerializer);
         return this.__box2dSerializer;
@@ -207,6 +208,7 @@ export class MainScene extends g.Scene {
             box2d: this._box2d,
             controllers: [this._killController],
             layer: this._backgroundLayer,
+            flyNoFont: this._numericFont,
         });
         this.__explosionFactory = new ExplosionFactory({
             scene: this,
@@ -337,7 +339,7 @@ export class MainScene extends g.Scene {
             this._flyFactory.restore(ebodies);
         }
         else {
-            this._flyFactory.newInstance();
+            this._flyFactory.newInstance({ flyNo: 1 });
         }
     }
 

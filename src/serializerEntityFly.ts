@@ -10,17 +10,22 @@ export interface FlyEntityParam extends SpriteParam, FlashMutableComponentParam 
     floating: "up" | "idle" | "down";
     rotating: "clockwise" | "idle" | "anticlockwise";
     deltaAngle: number;
+    flyNo: number;
 }
 
 export interface FlyEntitySerializerParameterObject extends Omit<SpriteSerializerParameterObject, "entitySerializers"> {
+    flyNoFont: g.Font;
 }
 
 export class FlyEntitySerializer extends SpriteSerializer implements ObjectSerializer<FlyEntity, FlyEntityParam> {
+    readonly _flyNoFont: g.Font;
+
     constructor(param: FlyEntitySerializerParameterObject) {
         super({
             ...param,
             entitySerializers: [],
         });
+        this._flyNoFont = param.flyNoFont;
     }
 
     override filter(objectType: string): boolean {
@@ -38,6 +43,7 @@ export class FlyEntitySerializer extends SpriteSerializer implements ObjectSeria
                 floating: object.floating,
                 rotating: object.rotating,
                 deltaAngle: object.deltaAngle,
+                flyNo: object._flyNo,
             },
         };
     }
@@ -61,6 +67,8 @@ export class FlyEntitySerializer extends SpriteSerializer implements ObjectSeria
             floating: param.floating,
             rotating: param.rotating,
             deltaAngle: param.deltaAngle,
+            flyNo: param.flyNo,
+            flyNoFont: this._flyNoFont,
         };
     }
 }

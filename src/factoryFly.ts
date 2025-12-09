@@ -11,6 +11,11 @@ export interface FlyFactoryParameterObject {
     box2d: Box2D;
     layer: g.E;
     controllers: ReadonlyArray<Dynamics.Controllers.b2Controller>;
+    flyNoFont: g.Font;
+}
+
+export interface FlyParameterObject {
+    flyNo: number;
 }
 
 export class FlyFactory {
@@ -21,16 +26,19 @@ export class FlyFactory {
     readonly box2d: Box2D;
     readonly layer: g.E;
     readonly desiredSpeed: number;
+    readonly flyNoFont: g.Font;
 
     constructor(param: FlyFactoryParameterObject) {
         this.scene = param.scene;
         this.box2d = param.box2d;
         this.controllers = param.controllers;
         this.layer = param.layer;
+        this.flyNoFont = param.flyNoFont;
         this.desiredSpeed = Constants.fly.speed.x / g.game.fps / this.box2d.scale;
     }
 
-    newInstance(): TypedEBody<FlyEntity> {
+    newInstance(param: FlyParameterObject): TypedEBody<FlyEntity> {
+        const hp = Math.ceil(Constants.fly.hp.initialMax * Math.pow(Constants.fly.hp.poewerUpRate, param.flyNo - 1));
         const ebody = this.box2d.createBody(
             new FlyEntity({
                 scene: this.scene,
@@ -39,14 +47,16 @@ export class FlyFactory {
                 anchorY: 0.5,
                 ...this._spawn(),
                 ...Constants.fly.entity,
-                maxHP: Constants.fly.maxHP,
-                initialHP: Constants.fly.maxHP,
+                maxHP: hp,
+                initialHP: hp,
                 duration: Constants.fly.flash.frame,
                 initialTimeout: 0,
                 direction: "left",
                 floating: "idle",
                 rotating: "idle",
                 deltaAngle: 0,
+                flyNoFont: this.flyNoFont,
+                ...param,
             }),
             this.box2d.createBodyDef(Constants.fly.body),
             [
@@ -135,7 +145,7 @@ export class FlyFactory {
             this._rotate(ebody, false, ebody.entity.deltaAngle * Constants.world.resistance.rotate);
         });
         ebody.entity.mutableComponent.onKill.addOnce(() => {
-            this.newInstance();
+            this.newInstance({ flyNo: ebody.entity._flyNo + 1 });
         });
     }
 
