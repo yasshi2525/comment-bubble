@@ -1,10 +1,5 @@
 import { CannonEntity } from "./entityCannon";
-
-export interface FireEvent {
-    character: string;
-    commentID?: string;
-    isSelfComment: boolean;
-}
+import { FireEvent } from "./parameterEvent";
 
 export interface BulletQueueParameterObject {
     initialQueue: (FireEvent | null)[];

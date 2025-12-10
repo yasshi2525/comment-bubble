@@ -1,11 +1,11 @@
 import type { NamagameCommentEventComment } from "@akashic/akashic-cli-serve/lib/module/common/types/NamagameCommentPlugin";
-import GraphemeSplitter = require("grapheme-splitter");
 import { BulletQueue } from "./queueBullet";
 import { BroadcasterResolver } from "./resolverBroadcaster";
-import { Constants } from "./style";
+import { CommentMapper } from "./mapperComment";
 
 export interface CommentListenerParameterObject {
     scene: g.Scene;
+    mapper: CommentMapper;
     bulletQueue: BulletQueue;
     broadcasterResolver: BroadcasterResolver;
     preventAutoStart?: boolean;
@@ -13,16 +13,16 @@ export interface CommentListenerParameterObject {
 
 export class CommentListener {
     readonly _scene: g.Scene;
+    readonly _mapper: CommentMapper;
     readonly _bulletQueue: BulletQueue;
     readonly _broadcasterResolver: BroadcasterResolver;
-    readonly _splitter: GraphemeSplitter;
     _isStarted: boolean;
 
     constructor(param: CommentListenerParameterObject) {
         this._scene = param.scene;
         this._bulletQueue = param.bulletQueue;
+        this._mapper = param.mapper;
         this._broadcasterResolver = param.broadcasterResolver;
-        this._splitter = new GraphemeSplitter();
         this._isStarted = false;
         if (!param.preventAutoStart) {
             this.start();
@@ -50,54 +50,23 @@ export class CommentListener {
     }
 
     _handleComment(ev: NamagameCommentEventComment): void {
-        if (this._ignoresComment(ev.comment)) {
+        const evlist = this._mapper.map({
+            comment: ev.comment,
+            senderID: this._resolveSenderID(ev),
+            senderHash: this._resolveSenderHash(ev),
+            isSelfComment: this._isSelfComment(ev),
+        });
+        if (!evlist) {
             return;
         }
-        // 長過ぎるコメントは省略するため、投擲数をカウントする。
-        let length = 0;
-        // 連続した文字を拒否するため、過去に処理した文字を記憶しておく。
-        const cache: string[] = [];
-        // 左側から順番に投射するので、逆順に装填することで見た目の並びを一致させる
-        for (const character of this._splitter.splitGraphemes(ev.comment).reverse()) {
-            if (this._ignoresCharacter(character)) {
-                continue;
-            }
-            if (cache.length === Constants.comment.accept.max.sameCharacters && cache.every(prev => prev === character)) {
-                continue;
-            }
-            this._bulletQueue.append({
-                character: length < Constants.comment.accept.max.length ? character : "(ry",
-                commentID: this._resolveCommentID(ev),
-                isSelfComment: this._isSelfComment(ev),
-            });
-            if (length >= Constants.comment.accept.max.length) {
-                break;
-            }
-            cache.push(character);
-            if (cache.length > Constants.comment.accept.max.sameCharacters) {
-                cache.shift();
-            }
-            length++;
+        for (const fireEv of evlist) {
+            this._bulletQueue.append(fireEv);
         }
         // コメントが続くと切れ目がわからないのでスキマをあける
         this._bulletQueue.append(null);
     }
 
-    /**
-     * AA など実コメントと思われないものを除外する。改行のあるものを除外
-     */
-    _ignoresComment(comment: string): boolean {
-        return Constants.comment.reject.multiline && comment.indexOf("\n") !== -1;
-    }
-
-    /**
-     * 空白文字が入っていると読みづらいので除外
-     */
-    _ignoresCharacter(character: string): boolean {
-        return Constants.comment.reject.whitespace && character.trim().length === 0;
-    }
-
-    _resolveCommentID(ev: NamagameCommentEventComment): string | undefined {
+    _resolveSenderID(ev: NamagameCommentEventComment): string | undefined {
         if (ev.isAnonymous) {
             return undefined;
         }
@@ -105,6 +74,13 @@ export class CommentListener {
             return this._broadcasterResolver.getResolvedBroadcasterID();
         }
         return ev.userID;
+    }
+
+    _resolveSenderHash(ev: NamagameCommentEventComment): string | undefined {
+        if (ev.isAnonymous) {
+            return ev.userID;
+        }
+        return undefined;
     }
 
     _isSelfComment(ev: NamagameCommentEventComment): boolean {

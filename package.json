@@ -1,6 +1,6 @@
 {
     "name": "@yasshi2525/comment-bubble",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "private": "true",
     "license": "MIT",
     "author": "yasshi2525",
@@ -24,7 +24,6 @@
         "@stylistic/eslint-plugin": "^5.4.0",
         "@types/jest": "^30.0.0",
         "@typescript-eslint/parser": "^8.46.1",
-        "@yasshi2525/jest-environment-akashic": "^0.1.5",
         "eslint": "^9.37.0",
         "globals": "^16.4.0",
         "jest": "^30.2.0",

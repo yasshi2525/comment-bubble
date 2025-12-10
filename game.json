@@ -293,6 +293,62 @@
 					".ogg"
 				]
 			}
+		},
+		"kurita-bullet": {
+			"type": "image",
+			"path": "image/kurita-bullet.png",
+			"width": 75,
+			"height": 75
+		},
+		"entityBulletSpecial": {
+			"type": "script",
+			"path": "script/entityBulletSpecial.js",
+			"global": true
+		},
+		"factoryBulletBase": {
+			"type": "script",
+			"path": "script/factoryBulletBase.js",
+			"global": true
+		},
+		"factoryBulletKurita": {
+			"type": "script",
+			"path": "script/factoryBulletKurita.js",
+			"global": true
+		},
+		"mapperComment": {
+			"type": "script",
+			"path": "script/mapperComment.js",
+			"global": true
+		},
+		"mapperCommentEmbedded": {
+			"type": "script",
+			"path": "script/mapperCommentEmbedded.js",
+			"global": true
+		},
+		"mapperCommentEmbedding": {
+			"type": "script",
+			"path": "script/mapperCommentEmbedding.js",
+			"global": true
+		},
+		"mapperCommentFiltering": {
+			"type": "script",
+			"path": "script/mapperCommentFiltering.js",
+			"global": true
+		},
+		"parameterEvent": {
+			"type": "script",
+			"path": "script/parameterEvent.js",
+			"global": true
+		},
+		"serializerEntityBulletSpecial": {
+			"type": "script",
+			"path": "script/serializerEntityBulletSpecial.js",
+			"global": true
+		},
+		"serializerMapperCommentFIltering": {
+			"type": "script",
+			"path": "script/serializerMapperCommentFIltering.js",
+			"global": true
 		}
 	},
 	"environment": {

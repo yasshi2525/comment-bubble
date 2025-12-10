@@ -1,4 +1,5 @@
 import { BodyType, Box2DBodyDef, Box2DFixtureDef } from "@akashic-extension/akashic-box2d";
+import { CommandType } from "./parameterEvent";
 
 const category = {
     boundary: 1,
@@ -55,6 +56,17 @@ export class Constants {
                 reject: {
                     whitespace: true,
                     multiline: true,
+                    sameComment: true,
+                },
+                special: {
+                    escape: "\\",
+                    mapper: {
+                        // key は本当は数字にしたいが、TypesSriptが number と解釈するため英字1文字で
+                        a: "kurita",
+                    } as const satisfies Record<string, CommandType>,
+                    matcher: {
+                        kurita: ["栗田穣崇", "栗田しげたか", "栗田", "くりたしげたか"],
+                    } satisfies Record<CommandType, string[]>,
                 },
             },
             world: {
@@ -70,7 +82,7 @@ export class Constants {
                     /**
                      * N(度/s)
                      */
-                    rotate: 0.0005,
+                    rotate: 0.002,
                 },
             },
             boundary: {
@@ -86,7 +98,10 @@ export class Constants {
                 } satisfies Box2DFixtureDef,
             },
             bullet: {
-                maxHP: 1,
+                maxHP: {
+                    basic: 1,
+                    kurita: 2,
+                },
                 radius: scene.asset.getImageById("bullet-other").width / 2,
                 body: {
                     type: BodyType.Dynamic,
@@ -150,7 +165,7 @@ export class Constants {
             },
             fly: {
                 hp: {
-                    initialMax: 15,
+                    initialMax: 5,
                     poewerUpRate: 1.5,
                 },
                 /**
@@ -214,7 +229,7 @@ export class Constants {
                     /**
                      * N
                      */
-                    x: 0.1,
+                    x: 1,
                     /**
                      * N
                      */

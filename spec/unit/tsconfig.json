@@ -2,8 +2,7 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "noEmit": true,
-    "types": ["node/console", "jest", "@yasshi2525/jest-environment-akashic-global"],
-    "typeRoots": ["../../typings", "../../node_modules/@types", "../../node_modules"]
+    "types": ["node/console", "jest"],
   },
 
   "include": [

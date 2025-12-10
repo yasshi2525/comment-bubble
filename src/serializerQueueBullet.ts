@@ -1,6 +1,7 @@
 import { ObjectDef, ObjectSerializer } from "@yasshi2525/akashic-box2d-serializer";
-import { BulletQueue, FireEvent } from "./queueBullet";
+import { BulletQueue } from "./queueBullet";
 import { CannonEntity } from "./entityCannon";
+import { FireEvent } from "./parameterEvent";
 
 export const bulletQueueType = BulletQueue.name;
 

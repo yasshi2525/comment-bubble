@@ -1,6 +1,7 @@
 import { Box2DBodiesParam, EntityParam, FrameSpriteParam, ObjectDef } from "@yasshi2525/akashic-box2d-serializer";
 import { CannonEntityParam } from "./serializerEntityCannon";
 import { BulletQueueParam } from "./serializerQueueBullet";
+import { CommentFilteringMapperParam } from "./serializerMapperCommentFIltering";
 
 export interface SnapshotParameterObject {
     tick: number;
@@ -14,4 +15,7 @@ export interface SnapshotParameterObject {
     explosions: ObjectDef<FrameSpriteParam>[];
     broadcasterID?: string;
     activeUserNum: number;
+    comment: {
+        filter: ObjectDef<CommentFilteringMapperParam>;
+    };
 }

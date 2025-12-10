@@ -28,6 +28,14 @@ import { ActiveUserNumSender } from "./senderActiveUserNum";
 import { HeartbeatListener } from "./listenerHeartbeat";
 import { ActiveUserNumListener } from "./listenerActiveUserNum";
 import { HeartbeatSender } from "./senderHeartbeat";
+import { CommentFilteringMapperParam, CommentFilteringMapperSerializer } from "./serializerMapperCommentFIltering";
+import GraphemeSplitter = require("grapheme-splitter");
+import { KuritaBulletFactory } from "./factoryBulletKurita";
+import { SpecialBulletEntitySerializer } from "./serializerEntityBulletSpecial";
+import { CommentFilteringMapper } from "./mapperCommentFiltering";
+import { CommentMapper } from "./mapperComment";
+import { EmbeddedCommentMapper } from "./mapperCommentEmbedded";
+import { CommentEmbeddingMapper } from "./mapperCommentEmbedding";
 
 export interface MainSceneParameterObject extends g.SceneParameterObject {
     snapshot?: SnapshotParameterObject;
@@ -39,6 +47,7 @@ export class MainScene extends g.Scene {
         "numeric", "numeric-glyph",
         ...ActiveUserNumLabel.assets,
         ...BulletFactory.assets,
+        ...KuritaBulletFactory.assets,
         ...CannonFactory.assets,
         ...FlyFactory.assets,
         ...ExplosionFactory.assets,
@@ -51,6 +60,7 @@ export class MainScene extends g.Scene {
     private __numericFont?: g.Font;
     private __backgroundLayer?: g.E;
     private __foregroundLayer?: g.E;
+    private __grapheme?: GraphemeSplitter;
     private __box2d?: Box2D;
     private __horizonController?: HorizonController;
     private __killController?: KillController;
@@ -59,17 +69,21 @@ export class MainScene extends g.Scene {
     private __bulletQueue?: BulletQueue;
     private __explosions?: ExplosionEntity[];
     private __bulletFactory?: BulletFactory;
+    private __kuritaBulletFactory?: KuritaBulletFactory;
     private __flyFactory?: FlyFactory;
     private __explosionFactory?: ExplosionFactory;
     private __plainMatrixSerializer?: PlainMatrixSerializer;
     private __imageAssetSerializer?: ImageAssetSerializer;
     private __cannonSerializer?: CannonEntitySerializer;
     private __bulletQueueSerializer?: BulletQueueSerializer;
+    private __commentFilteringMapperSerializer?: CommentFilteringMapperSerializer;
     private __bulletSerializer?: BulletEntitySerializer;
+    private __specialBulletSerializer?: SpecialBulletEntitySerializer;
     private __flySerializer?: FlyEntitySerializer;
     private __explosionSerializer?: FrameSpriteSerializer;
     private __layerSerializer?: LayerEntitySerializer;
     private __activeUserNumSender?: ActiveUserNumSender;
+    private __commentFilteringMapper?: CommentFilteringMapper;
 
     constructor(param: MainSceneParameterObject) {
         super({
@@ -136,14 +150,28 @@ export class MainScene extends g.Scene {
         // 万が一サーバーが skip するとスナップショットに影響するのでガード
         // ロードした瞬間は skipping でないので一瞬映るがそこには目を瞑る。
         if (!g.game.isActiveInstance()) {
+            const skippingLabel = new g.Label({
+                scene: this,
+                parent: this,
+                font: this._characterFont,
+                text: "同期中（しばらくお待ち下さい）",
+                x: g.game.width / 2,
+                y: g.game.height / 2,
+                anchorX: 0.5,
+                anchorY: 0.5,
+                hidden: true,
+                local: true,
+            });
             g.game.onSkipChange.add((skipping) => {
                 if (skipping) {
                     this._backgroundLayer.hide();
                     this._foregroundLayer.hide();
+                    skippingLabel.show();
                 }
                 else {
                     this._backgroundLayer.show();
                     this._foregroundLayer.show();
+                    skippingLabel.hide();
                 }
             });
         }
@@ -180,6 +208,13 @@ export class MainScene extends g.Scene {
             plainMatrixSerializer: this._box2dSerializer._plainMatrixSerializer,
         });
         this.__box2dSerializer._entitySerializers.push(this.__bulletSerializer);
+        this.__specialBulletSerializer = new SpecialBulletEntitySerializer({
+            scene: this,
+            entitySerializers: this.__box2dSerializer._entitySerializers,
+            imageAssetSerializer: this._box2dSerializer._imageAssetSerializer,
+            plainMatrixSerializer: this._box2dSerializer._plainMatrixSerializer,
+        });
+        this.__box2dSerializer._entitySerializers.push(this.__specialBulletSerializer);
         this.__flySerializer = new FlyEntitySerializer({
             scene: this,
             plainMatrixSerializer: this._box2dSerializer._plainMatrixSerializer,
@@ -202,6 +237,13 @@ export class MainScene extends g.Scene {
             cannon,
             layer: this._backgroundLayer,
             characterFont: this._characterFont,
+        });
+        this.__kuritaBulletFactory = new KuritaBulletFactory({
+            scene: this,
+            box2d: this._box2d,
+            controllers: [this._killController, this._horizonController],
+            cannon,
+            layer: this._backgroundLayer,
         });
         this.__flyFactory = new FlyFactory({
             scene: this,
@@ -227,6 +269,7 @@ export class MainScene extends g.Scene {
             cannon,
             bulletQueue,
             bulletFactory: this.__bulletFactory,
+            kuritaBulletFactory: this.__kuritaBulletFactory,
         };
     }
 
@@ -267,11 +310,21 @@ export class MainScene extends g.Scene {
     }
 
     _initializeCommentReceptor(): void {
-        connectFireEvent(this._bulletQueue, this._bulletFactory);
+        connectFireEvent(this._bulletQueue, {
+            plain: this._bulletFactory,
+            kurita: this._kuritaBulletFactory,
+        });
+        const filter = this._getCommentFilteringMapper();
         new CommentListener({
             scene: this,
             bulletQueue: this._bulletQueue,
             broadcasterResolver: this._broadcasterResolver,
+            mapper: new CommentMapper({
+                filter,
+                embedding: new CommentEmbeddingMapper(),
+                parser: new EmbeddedCommentMapper({ grapheme: this._grapheme }),
+                grapheme: this._grapheme,
+            }),
         });
     }
 
@@ -317,6 +370,20 @@ export class MainScene extends g.Scene {
         return this._bulletQueueSerializer.deserialize(json);
     }
 
+    _getCommentFilteringMapper(): CommentFilteringMapper {
+        return this.__commentFilteringMapper = this._snapshot
+            ? this._restoreNewCommentFilteringMapper(this._snapshot.comment.filter)
+            : this._createNewCommentFilteringMapper();
+    }
+
+    _createNewCommentFilteringMapper(): CommentFilteringMapper {
+        return new CommentFilteringMapper({ grapheme: this._grapheme });
+    }
+
+    _restoreNewCommentFilteringMapper(json: ObjectDef<CommentFilteringMapperParam>): CommentFilteringMapper {
+        return this._commentFilteringMapperSerializer.deserialize(json);
+    }
+
     _getExplosions(): ExplosionEntity[] {
         return this.__explosions = this._snapshot
             ? this._restoreExplisions(this._snapshot.explosions)
@@ -335,7 +402,7 @@ export class MainScene extends g.Scene {
     _restoreEBodies(): void {
         if (this._snapshot) {
             const ebodies = this._box2dSerializer.desrializeBodies(this._snapshot.box2d);
-            this._bulletFactory.restoreController(ebodies);
+            this._bulletFactory.restore(ebodies);
             this._flyFactory.restore(ebodies);
         }
         else {
@@ -359,6 +426,9 @@ export class MainScene extends g.Scene {
                         broadcasterID: this._broadcasterResolver.getResolvedBroadcasterID(),
                         explosions: this._explosions.map(e => this._explosionSerializer.serialize(e)),
                         activeUserNum: this._activeUserNum,
+                        comment: {
+                            filter: this._commentFilteringMapperSerializer.serialize(this._commentFilteringMapper),
+                        },
                     } satisfies SnapshotParameterObject;
                     return { snapshot };
                 });
@@ -406,6 +476,13 @@ export class MainScene extends g.Scene {
             throw new Error("foregroundLayer isn't defined.");
         }
         return this.__foregroundLayer;
+    }
+
+    get _grapheme(): GraphemeSplitter {
+        if (!this.__grapheme) {
+            this.__grapheme = new GraphemeSplitter();
+        }
+        return this.__grapheme;
     }
 
     get _box2d(): Box2D {
@@ -471,6 +548,13 @@ export class MainScene extends g.Scene {
         return this.__bulletFactory;
     }
 
+    get _kuritaBulletFactory(): KuritaBulletFactory {
+        if (!this.__kuritaBulletFactory) {
+            throw new Error("kuritaBulletFactory isn't defined.");
+        }
+        return this.__kuritaBulletFactory;
+    }
+
     get _explosionFactory(): ExplosionFactory {
         if (!this.__explosionFactory) {
             throw new Error("explosionFactory isn't defined.");
@@ -513,11 +597,27 @@ export class MainScene extends g.Scene {
         return this.__bulletQueueSerializer;
     }
 
+    get _commentFilteringMapperSerializer(): CommentFilteringMapperSerializer {
+        if (!this.__commentFilteringMapperSerializer) {
+            this.__commentFilteringMapperSerializer = new CommentFilteringMapperSerializer({
+                grapheme: this._grapheme,
+            });
+        }
+        return this.__commentFilteringMapperSerializer;
+    }
+
     get _bulletSerializer(): BulletEntitySerializer {
         if (!this.__bulletSerializer) {
             throw new Error("bulletSerializer isn't defined.");
         }
         return this.__bulletSerializer;
+    }
+
+    get _specialBulletSerializer(): SpecialBulletEntitySerializer {
+        if (!this.__specialBulletSerializer) {
+            throw new Error("specialBulletSerializer isn't defined.");
+        }
+        return this.__specialBulletSerializer;
     }
 
     get _flySerializer(): FlyEntitySerializer {
@@ -566,5 +666,12 @@ export class MainScene extends g.Scene {
             throw new Error("activeUserNumSender isn't defined.");
         }
         return this.__activeUserNumSender.activeNum();
+    }
+
+    get _commentFilteringMapper(): CommentFilteringMapper {
+        if (!this.__commentFilteringMapper) {
+            throw new Error("commentFilteringMapper isn't defined.");
+        }
+        return this.__commentFilteringMapper;
     }
 }
